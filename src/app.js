@@ -2,12 +2,24 @@ const express = require("express")
 
 const app = express();
 
-app.get('/',(req,res)=>{
-    res.send("homepage")
+
+//this is dynamic routes 
+app.get('/user/:id/:firstname/:lastname',(req,res)=>{
+    // console.log(req.query)
+    console.log(req.params)
+    res.send({firstname: "pooja", lastname: "biradar"})
 })
 
-app.get('/see',(req,res)=>{
-    res.send("hey this is the test ")
+app.post('/user',(req,res)=>{
+    res.send("This is the post http request for user")
+})
+
+app.patch('/user',(req,res)=>{
+    res.send("This is the patch http request for user")
+})
+
+app.delete('/user',(req,res)=>{
+    res.send("This is the delete http request for user")
 })
 
 app.listen(3000,()=>{
