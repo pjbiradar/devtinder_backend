@@ -2,25 +2,27 @@ const express = require("express")
 
 const app = express();
 
+const {adminAuth,userAuth} = require('../middleware/auth')
 
-//router handlers
-app.use("/user",(req,res,next)=>{
-    console.log("this is response1")
-    // res.send("this is response1")
-    next()
-},
-(req,res,next)=>{
-    res.send("this is response2")
-    next();
-},
+//for userauth
+// app.use("/user",userAuth)
+app.get("/user/adduser",userAuth,(req,res,next)=>{
+    res.send("useris added")
+})
 
-(req,res,next)=>
-{
-    res.send("this is response 3")
-    next();
 
-}
-)
+app.use("/admin",adminAuth)
+
+app.get("/admin/alldata",(req,res,next)=>{
+    res.send("all data reviewed")
+})
+
+app.post("/admin/deletedata",(req,res,next)=>{
+    res.send("all data deleted")
+})
+
+
+
 
 
 //this is dynamic routes 
