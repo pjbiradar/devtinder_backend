@@ -1,7 +1,36 @@
+require('dotenv').config();
+console.log("URI:", process.env.MONGODB_URI);  // check what this prints
 const express = require("express")
 
-const app = express();
 
+const connectDB = require('./config/database')
+const app = express();
+app.use(express.json())
+
+//creating an signup api
+const User =  require("./Models/User")
+
+app.post("/signup",async (req,res)=>{
+    //creating new instance of the usermodel
+    const user = new User({
+        firstName:"Pooja",
+        LastName: "Biradar",
+        Age: 56,
+        pwd: "pooja@123"
+    })
+
+    await user.save();
+    res.send("User Added successfully")
+})
+
+
+
+//call db before listnting to the port 3000
+connectDB();
+
+app.listen(3000,()=>{
+    console.log("server running on port 3000")
+})
 
 //errorhandling
 // app.get('/user',(err,req,res,next)=>{
@@ -70,6 +99,6 @@ const app = express();
 ///////////////////////////////////////////////
 
 
-app.listen(3000,()=>{
-    console.log("server running on port 3000")
-})
+// app.listen(3000,()=>{
+//     console.log("server running on port 3000")
+// })
