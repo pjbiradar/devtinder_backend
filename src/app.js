@@ -10,17 +10,22 @@ app.use(express.json())
 //creating an signup api
 const User =  require("./Models/User")
 
+//usnig express middleware 
+app.use(express.json())
+
 app.post("/signup",async (req,res)=>{
     //creating new instance of the usermodel
-    const user = new User({
-        firstName:"Pooja",
-        LastName: "Biradar",
-        Age: 56,
-        pwd: "pooja@123"
-    })
+    const user = new User(req.body)
 
+   try{
     await user.save();
     res.send("User Added successfully")
+
+   }
+   catch(err){
+    res.status(400).send("Error saving the user"+ err.message)
+   }
+    
 })
 
 
