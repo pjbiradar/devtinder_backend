@@ -12,8 +12,13 @@ const userSchema = new mongoose.Schema({
         type:Number,
     },
     pwd:{
-        type:String
+        type:String,
+    },
+    email:{
+        type: String
+
     }
+    
 })
 
 module.exports = mongoose.model("User",userSchema)

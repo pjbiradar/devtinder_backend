@@ -2,23 +2,84 @@ require('dotenv').config();
 console.log("URI:", process.env.MONGODB_URI);  // check what this prints
 const express = require("express")
 
-
 const connectDB = require('./config/database')
 const app = express();
 app.use(express.json())
 
-//creating an signup api
-const User =  require("./Models/User")
+
+const User =  require("./Models/User");
+
 
 //usnig express middleware 
 app.use(express.json())
 
+//adding email key to the olders users also
+app.put("/addemailtooldusers",async(req,res)=>{
+    try{
+        const result = await User.updateMany(
+            {email: {$exists: false}},
+            {$set: {email: ""} }
+            )
+
+        res.send({
+            message: "email is added to old users",
+            modifiedCount: result.modifiedCount
+        })
+
+    }
+    catch(err){
+        res.status(400).send(err.message)
+
+    }
+})
+
+//get the user by age email
+app.get("/user",async(req,res)=>{
+    try{
+        const user = await User.find({email: req.body.email})
+        console.log(user)
+        if(user.length === 0){
+            res.status(404).send("user not found")
+
+        }
+        else{
+            res.send(user)
+        }
+    }
+    catch(err){
+        res.status(404).send("something went wrong")
+
+    }
+
+
+})
+
+
+//feed api - get/feed -get all the users from the database
+
+app.get("/feed",async(req,res)=>{
+    try{
+        const user = await User.find({
+
+        })
+        res.send(user)
+
+    }
+    catch(err){
+        res.status(404).send(err.message)
+
+    }
+
+})
+
+
+//creating an signup api
 app.post("/signup",async (req,res)=>{
     //creating new instance of the usermodel
     const user = new User(req.body)
 
    try{
-    await user.save();
+    await user.save();  
     res.send("User Added successfully")
 
    }
@@ -27,7 +88,6 @@ app.post("/signup",async (req,res)=>{
    }
     
 })
-
 
 
 //call db before listnting to the port 3000
