@@ -36,7 +36,7 @@ app.put("/addemailtooldusers",async(req,res)=>{
 //get the user by age email
 app.get("/user",async(req,res)=>{
     try{
-        const user = await User.find({email: req.body.email})
+        const user = await User.findOne({email: req.body.email})
         console.log(user)
         if(user.length === 0){
             res.status(404).send("user not found")
@@ -50,8 +50,6 @@ app.get("/user",async(req,res)=>{
         res.status(404).send("something went wrong")
 
     }
-
-
 })
 
 
@@ -59,19 +57,42 @@ app.get("/user",async(req,res)=>{
 
 app.get("/feed",async(req,res)=>{
     try{
-        const user = await User.find({
-
-        })
+        const user = await User.find({})
         res.send(user)
 
     }
     catch(err){
         res.status(404).send(err.message)
-
     }
-
 })
 
+
+//api to delete the userid 
+app.delete("/user",async(req,res)=>{
+
+    try{
+        const user = await User.findByIdAndDelete({_id: req.body.userId})
+        res.send("deleted user successfuly")
+
+    }
+    catch(err){
+        res.status(404).send(err.message)
+    }
+})
+
+//update data of the user
+app.patch("/user",async(req,res)=>{
+    const userId = req.body.userId;
+    const data = req.body;
+    try{
+        const user = await User.findByIdAndUpdate({_id: userId},data,{returnDocument: 'after'})
+        res.send("user successfully updated")
+
+    }
+    catch(err){
+        res.status(400).send("Error saving the user"+ err.message)
+    }
+})
 
 //creating an signup api
 app.post("/signup",async (req,res)=>{
