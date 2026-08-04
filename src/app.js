@@ -1,37 +1,49 @@
 require('dotenv').config();
-console.log("URI:", process.env.MONGODB_URI);  // check what this prints
 const express = require("express")
-
+const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser")
 const connectDB = require('./config/database')
 const app = express();
-app.use(express.json())
-
-
 const User =  require("./Models/User");
 
-
-//usnig express middleware 
 app.use(express.json())
+app.use(cookieParser())
 
-//adding email key to the olders users also
-app.put("/addemailtooldusers",async(req,res)=>{
+//creating an signup api
+app.post("/signup",async (req,res)=>{
     try{
-        const result = await User.updateMany(
-            {email: {$exists: false}},
-            {$set: {email: ""} }
-            )
 
-        res.send({
-            message: "email is added to old users",
-            modifiedCount: result.modifiedCount
+    
+        const {firstName, lastName,age,password,email,gender} = req.body;
+
+        const passwordHash = await bcrypt.hash(password,10);
+
+        const user = new User({
+            firstName,
+            lastName,
+            email,
+            password:passwordHash,
+            age,
+            gender
+
         })
 
-    }
-    catch(err){
-        res.status(400).send(err.message)
+        const savedUser = await user.save();
+        const token = await savedUser.getJWT();
+        console.log("Generated Token:", token);
+        
+        res.cookie("token",token,{expires:new Date(Date.now()+7*24*60*60*1000)})
+        console.log("cookie sent")
+        res.send("User Added successfully")
 
-    }
+   }
+   catch(err){
+    res.status(400).send("Error saving the user"+ err.message)
+   }
+    
 })
+
+
 
 //get the user by age email
 app.get("/user",async(req,res)=>{
@@ -81,11 +93,23 @@ app.delete("/user",async(req,res)=>{
 })
 
 //update data of the user
-app.patch("/user",async(req,res)=>{
-    const userId = req.body.userId;
+app.patch("/user/:userId",async(req,res)=>{
+    const userId = req.params?.userId;
     const data = req.body;
     try{
-        const user = await User.findByIdAndUpdate({_id: userId},data,{returnDocument: 'after'})
+        //api validation
+        const ALLOWED_UPDATES = ["photoUrl","about","gender","Age","skills","email"]
+        const isUpdatedAllowed = Object.keys(data).every((k)=> ALLOWED_UPDATES.includes(k))
+
+        if(!isUpdatedAllowed){
+            throw new Error("update is not allowed")
+        }
+
+        if(data?.skills.length > 10){
+            throw new Error("skills should be less than 10 or equal to 10")
+        }
+       
+        const user = await User.findByIdAndUpdate({_id: userId},data,{returnDocument: 'after', runValidators: true})
         res.send("user successfully updated")
 
     }
@@ -94,21 +118,7 @@ app.patch("/user",async(req,res)=>{
     }
 })
 
-//creating an signup api
-app.post("/signup",async (req,res)=>{
-    //creating new instance of the usermodel
-    const user = new User(req.body)
 
-   try{
-    await user.save();  
-    res.send("User Added successfully")
-
-   }
-   catch(err){
-    res.status(400).send("Error saving the user"+ err.message)
-   }
-    
-})
 
 
 //call db before listnting to the port 3000
