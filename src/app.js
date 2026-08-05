@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser")
 const connectDB = require('./config/database')
 const app = express();
 const User =  require("./Models/User");
+const {userAuth} = require("../middleware/auth")
 
 app.use(express.json())
 app.use(cookieParser())
@@ -12,8 +13,6 @@ app.use(cookieParser())
 //signup api
 app.post("/signup",async (req,res)=>{
     try{
-
-    
         const {firstName, lastName,age,password,email,gender} = req.body;
 
         const passwordHash = await bcrypt.hash(password,10);
@@ -43,7 +42,33 @@ app.post("/signup",async (req,res)=>{
     
 })
 
+app.post("/login",async(req,res)=>{
+    try{
+        const{email,password} = req.body;
+        const  user = await User.findOne({email: email})
+        if(!user){
+            throw new Error("Invalid credentials")
+        }
 
+        const ispasswordValid = await user.validatePassword(password)
+        if(!ispasswordValid){
+            throw new Error("Invaild credentials")
+        }
+
+        const token = await user.getJWT();
+        res.cookie("token", token, { expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) });
+
+        res.send("Login successful!");
+        }
+        catch(err){
+        res.status(400).send("Error: " + err.message);
+        }
+    }
+)
+
+app.get("/profile", userAuth, (req, res) => {
+    res.send(req.user);
+});
 
 //get the user by age email
 app.get("/user",async(req,res)=>{
